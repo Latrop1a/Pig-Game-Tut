@@ -15,6 +15,8 @@ GAME RULES:
 */
 
 
+// todo: add timer for fading dices on rulebreak and display violated rules
+
 let scores, roundScore, activePlayer, gameOnline, scoreMax, lastDice1, lastDice2;
 
 // Starting conditions
@@ -33,6 +35,9 @@ const init = () => {
   document.querySelector(".dice1").style.display = "none";
   document.querySelector(".dice2").style.display = "none";
   document.querySelector("#current-" + activePlayer).innerHTML = roundScore;
+  document.querySelector("#name-0").textContent = "Player 1";
+  document.querySelector("#name-1").textContent = "Player 2";
+
 };
 
 
@@ -40,7 +45,7 @@ const init = () => {
 document.querySelector(".btn-roll").addEventListener("click", () => {
 
   getScoreMax();
-
+  
   if (gameOnline) {
   // random number
     let dice1 = Math.floor(Math.random() * 6) + 1;
@@ -53,19 +58,19 @@ document.querySelector(".btn-roll").addEventListener("click", () => {
     dice2DOM.style.display = "block";
     dice2DOM.src = "dice-" + dice2 + ".png";
     
-    //game rules
+    //GAME RULES
     //if dice1 gets a 6 and had a 6 last throw its bye bye score
     if ((dice1 == 6 && lastDice1 == 6) || (dice2 == 6 && lastDice2 == 6)) {
       scoreChange("reset");
       console.log("whooosh!");
       nextPlayer();
-    } else if (dice1 > 1 && dice2 > 1) {
+    } else if (dice1 === 1 || dice2 === 1) {
+      nextPlayer();
+    } else {
       roundScore += dice1 + dice2; 
       document.querySelector("#current-" + activePlayer).innerHTML = roundScore;
       lastDice1 = dice1;
       lastDice2 = dice2;
-    } else {
-      nextPlayer();
     }
   }
 });
@@ -86,6 +91,7 @@ document.querySelector(".btn-hold").addEventListener("click", () => {
     } else {
       //victory
       gameOnline = false;
+      document.querySelector("#name-" + activePlayer).textContent = "WINNER";
     }  
   }
 });
@@ -102,10 +108,13 @@ const nextPlayer = () => {
   //make roundscore 0
   roundScore = 0;
   document.querySelector("#current-" + activePlayer).innerHTML = roundScore;
-  //change player -  class="player-0-panel active"
+  //change active player -  class="player-0-panel active"
   document.querySelector(".player-" + activePlayer + "-panel").classList.remove("active");
   activePlayer === 0 ? activePlayer = 1 : activePlayer = 0;
   document.querySelector(".player-" +activePlayer + "-panel").classList.add("active");
+  //remove dice --- really only works with a time In think..
+  //document.querySelector(".dice1").style.display = "none";
+  //document.querySelector(".dice2").style.display = "none";
 };
 
 
@@ -119,11 +128,11 @@ const scoreChange = (action) => {
   document.querySelector("#score-" + activePlayer).innerHTML = scores[activePlayer];
 };
 
-//gets scoreMax or defaults to 100 if none was entered
+//gets scoreMax or defaults to 300 if none was entered
 const getScoreMax = () => {
   scoreMax = document.querySelector("#scoreMax").value;
   if (!scoreMax) {
-    scoreMax = 100;
+    scoreMax = 300;
   }
 }
 
