@@ -24,7 +24,6 @@ const init = () => {
   roundScore = 0;
   activePlayer = 0;
   getScoreMax();
-  console.log(scoreMax);
   lastDice1 = 0;
 
   document.querySelector(".player-1-panel").classList.remove("active");
@@ -60,7 +59,7 @@ document.querySelector(".btn-roll").addEventListener("click", () => {
       scoreChange("reset");
       console.log("whooosh!");
       nextPlayer();
-    } else if (dice1 > 0 && dice2 > 0) {
+    } else if (dice1 > 1 && dice2 > 1) {
       roundScore += dice1 + dice2; 
       document.querySelector("#current-" + activePlayer).innerHTML = roundScore;
       lastDice1 = dice1;
