@@ -15,7 +15,7 @@ GAME RULES:
 */
 
 
-let scores, roundScore, activePlayer, gameOnline, maxScore;
+let scores, roundScore, activePlayer, gameOnline, maxScore, lastDice;
 
 // Starting conditions
 const init = () => {
@@ -24,6 +24,7 @@ const init = () => {
   roundScore = 0;
   activePlayer = 0;
   maxScore = 100;
+  lastDice = 0;
 
   document.querySelector("#score-0").innerHTML = 0;
   document.querySelector("#score-1").innerHTML = 0;
@@ -47,7 +48,12 @@ document.querySelector(".btn-roll").addEventListener("click", () => {
     if (dice > 1) {
       roundScore += dice; 
       document.querySelector("#current-" + activePlayer).innerHTML = roundScore;
-    } else {
+      lastDice = dice;
+    } else if (dice === 6 && lastDice === dice) {
+      scores[activePlayer] = 0;
+      nextPlayer();
+    }
+    else {
       nextPlayer();
     }
   }
@@ -78,6 +84,7 @@ document.querySelector(".btn-new").addEventListener("click", init);
 
 // On Player Change
 const nextPlayer = () => {
+  lastDice = 0;
   //make roundscore 0
   roundScore = 0;
   document.querySelector("#current-" + activePlayer).innerHTML = roundScore;
