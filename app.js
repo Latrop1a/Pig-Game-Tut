@@ -15,9 +15,10 @@ GAME RULES:
 */
 
 
-// todo: add timer for fading dices on rulebreak and display violated rules
+// todo:  display violated rules... + maybe fading animation for dices
+// todo:  + choosing rules at the beginning
 
-let scores, roundScore, activePlayer, gameOnline, scoreMax, lastDice1, lastDice2;
+let scores, roundScore, activePlayer, gameOnline, scoreMax, lastDice1, lastDice2, timeOutDice, ruleBreakString;
 
 // Starting conditions
 const init = () => {
@@ -46,7 +47,10 @@ const init = () => {
 document.querySelector(".btn-roll").addEventListener("click", () => {
   
   if (gameOnline) {
-  // random number
+
+    //make sure the remove dice timeout gets stopped for rapid clicking
+    clearTimeout(timeOutDice);
+    // random number
     let dice1 = Math.floor(Math.random() * 6) + 1;
     let dice2 = Math.floor(Math.random() * 6) + 1;
     // display result
@@ -93,7 +97,6 @@ document.querySelector(".btn-hold").addEventListener("click", () => {
       document.querySelector("#name-" + activePlayer).textContent = "WINNER";
       document.querySelector(".player-" + activePlayer + "-panel").classList.remove("active");
       document.querySelector(".player-" + activePlayer + "-panel").classList.add("winner");
-
     }  
   }
 });
@@ -114,9 +117,9 @@ const nextPlayer = () => {
   document.querySelector(".player-" + activePlayer + "-panel").classList.remove("active");
   activePlayer === 0 ? activePlayer = 1 : activePlayer = 0;
   document.querySelector(".player-" +activePlayer + "-panel").classList.add("active");
-  //remove dice --- really only works with a time In think..
-  //document.querySelector(".dice1").style.display = "none";
-  //document.querySelector(".dice2").style.display = "none";
+  //removes dice display after 1,5s
+  timeOutDice = setTimeout(removeDiceView, 1500);
+  
 };
 
 
@@ -134,8 +137,14 @@ const scoreChange = (action) => {
 const getScoreMax = () => {
   scoreMax = document.querySelector("#scoreMax").value;
   if (!scoreMax) {
-    scoreMax = 300;
+    scoreMax = 150;
   }
-}
+};
+
+const removeDiceView = () => {
+  //remove dice --- really only works with a time In think..
+  document.querySelector(".dice1").style.display = "none";
+  document.querySelector(".dice2").style.display = "none";
+};
 
 init();
