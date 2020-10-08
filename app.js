@@ -2,7 +2,7 @@
 GAME RULES:
 
 - The game has 2 players, playing in rounds
-- In each turn, a player rolls a dice1 as many times as he whishes. Each result get added to his ROUND score
+- In each turn, a player rolls a dice as many times as he whishes. Each result get added to his ROUND score
 - BUT, if the player rolls a 1, all his ROUND score gets lost. After that, it's the next player's turn
 - The player can choose to 'Hold', which means that his ROUND score gets added to his GLBAL score. After that, it's the next player's turn
 - The first player to reach 100 points on GLOBAL score wins the game
@@ -10,191 +10,226 @@ GAME RULES:
 3 challenges
 -player looses entire score after 2x6 - done
 -input field to html to set score max (.value property in js) - done?
--add a second dice1 to the game. when one is "1" player looses his score
+-add a second dice to the game. when one is "1" player looses his score
 
 */
 
+let gameOnline = false;
+let gameList = [],
+  ruleList = [];
+let gameCurrent, roundScore, ruleBreak;
 
-// todo:  display violated rules... + maybe fading animation for dices
-// todo:  + choosing rules at the beginning
-// todo: make a list of rules to activate/deactive upon start...class probably
-
-let scores, roundScore, activePlayer, gameOnline, scoreMax, lastDice1, lastDice2, timeOutDice, ruleBreakString;
-
-// Starting conditions
-const init = () => {
-  gameOnline = true;
-  scores = [0, 0];
-  roundScore = 0;
-  activePlayer = 0;
-  lastDice1 = 0;
-
-  domS.p1Panel.classList.remove("active");
-  domS.p0Panel.classList.add("active");
-  domS.scoreP0.innerHTML = 0;
-  domS.scoreP1.innerHTML = 0;
-  domS.dice1.style.display = "none";
-  domS.dice2.style.display = "none";
-  domS.roundScoreCurrentPlayer.innerHTML = roundScore;
-  domS.p0Name.textContent = "Player 1";
-  domS.p1Name.textContent = "Player 2";
-  domS.p0Panel.classList.remove("winner");
-  domS.p1Panel.classList.remove("winner");
-
+// all document shortcuts
+const doms = {
+  dice1: document.querySelector(".dice1"),
+  dice2: document.querySelector(".dice2"),
+  newGame: document.querySelector(".btn-new"),
+  diceRoll: document.querySelector(".btn-roll"),
+  maxScore: document.getElementById("scoreMax"),
+  name0: document.getElementById("name-0"),
+  currentScore0: document.getElementById("current-0"),
+  score0: document.getElementById("score-0"),
+  name1: document.getElementById("name-1"),
+  currentScore1: document.getElementById("current-1"),
+  score1: document.getElementById("score-1"),
+  hold: document.querySelector(".btn-hold"),
 };
+console.log(doms.diceRoll);
 
-
-// ROLL BUTTON
-document.querySelector(".btn-roll").addEventListener("click", () => {
-  
-  if (gameOnline) {
-
-    //make sure the remove dice timeout gets stopped for rapid clicking
-    clearTimeout(timeOutDice);
-    // random number
-    let dice1 = Math.floor(Math.random() * 6) + 1;
-    let dice2 = Math.floor(Math.random() * 6) + 1;
-    // display result
-    domS.dice1.style.display = "block";
-    domS.dice1.src = "dice-" + dice1 + ".png";
-    domS.dice2.style.display = "block";
-    domS.dice2.src = "dice-" + dice2 + ".png";
-    
-    //GAME RULES
-    //if dice1 gets a 6 and had a 6 last throw its bye bye score
-    if ((dice1 == 6 && lastDice1 == 6) || (dice2 == 6 && lastDice2 == 6)) {
-      scoreChange("reset");
-      console.log("whooosh!");
-      nextPlayer();
-    } else if (dice1 === 1 || dice2 === 1) {
-      nextPlayer();
-    } else {
-      roundScore += dice1 + dice2; 
-      domS.roundScoreCurrentPlayer.innerHTML = roundScore;
-      lastDice1 = dice1;
-      lastDice2 = dice2;
-    }
+// class for game, added into gameList array
+// maybe for easy switching or history later on
+class Game {
+  constructor(name, maxScore = 100, diceNumber = 2) {
+    this.name = name;
+    this.maxScore = maxScore;
+    this.diceNumber = diceNumber;
+    this.player1Score = 0;
+    this.player2Score = 0;
+    this.restart();
   }
-});
-
-// HOLD BUTTOn
-document.querySelector(".btn-hold").addEventListener("click", () => {
-
-  if (gameOnline) {
-
-    getScoreMax();
-    
-    //score transfer to permanent and update view
-    scoreChange("add");
-    //victory condition
-    if (scores[activePlayer] < scoreMax) {
-      //change player
-      nextPlayer();
-    } else {
-      //VICTORY
-      gameOnline = false;
-      domS.winnerName.textContent = "WINNER";
-      activePanel.classList.remove("active");
-      activePanel.classList.add("winner");
-    }  
+  //generate dice
+  rollDice() {
+    this.dice1 = Math.ceil(Math.random() * 6);
+    this.dice2 = Math.ceil(Math.random() * 6);
   }
-});
-
-// NEW GAME BUTTOn
-document.querySelector(".btn-new").addEventListener("click", init);
-
-
-// On Player Change
-const nextPlayer = () => {
-  //reset lastDice
-  lastDice1 = 0;
-  lastDice2 = 0;
-  //make roundscore 0
-  roundScore = 0;
-  domS.roundScoreCurrentPlayer.innerHTML = roundScore;
-  //change active player -  class="player-0-panel active"
-  activePanel.classList.remove("active");
-  activePlayer === 0 ? activePlayer = 1 : activePlayer = 0;
-  activePanel.classList.add("active");
-  //removes dice display after 1,5s
-  timeOutDice = setTimeout(removeDiceView, 1500);
-  
-};
-
-
-const scoreChange = (action) => {
-  //either adds roundscore on top or resets to zero
-  if (action === "add") {
-    scores[activePlayer] += roundScore;
-  } else if (action === "reset") {
-    scores[activePlayer] = 0;
+  //changes Player in Game and in UI
+  changePlayer() {
+    this.activePlayer === 0 ? (this.activePlayer = 1) : (this.activePlayer = 0);
   }
-  domS.scoreActive.innerHTML = scores[activePlayer];
-};
-
-//gets scoreMax or defaults to 300 if none was entered
-const getScoreMax = () => {
-  scoreMax = domS.scoreMaxInput.value;
-  if (!scoreMax) {
-    scoreMax = 150;
-  }
-};
-
-const removeDiceView = () => {
-  //remove dice --- really only works with a time In think..
-  domS.dice1.style.display = "none";
-  domS.dice2.style.display = "none";
-};
-
-
-// class for different rules that user can add or remove
-class Rules { 
-  constructor(name, message, checkFn) {
-    this.name = name;         // for rule activation menu
-    this.message = message;   // displayed after rule Break
-    this.checkFn = checkFn;   // rule logic
-  }
-  displayMessage() {
-    domS.ruleBreak.innerHTML = this.message;
-
-  }
-
-  checkRule(input) {
-    dice1 = input[0];
-    dice2 = input[1];
+  restart() {
+    this.activePlayer = 0;
+    roundScore = 0;
+    gameOnline = true;
+    ruleBreak = false;
+    doms.score0.innerHTML = "0";
+    doms.score1.innerHTML = "0";
+    doms.currentScore0.innerHTML = "0";
+    doms.currentScore1.innerHTML = "0";
   }
 }
 
-rule1 = new Rules ("No Ones!", "You rolled a one!", function(input) {
+//class for rules
+//maybe later utilized for dropdown menu or something
+class Rule {
+  constructor(id, name, description, active) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.active = active;
+  }
+}
 
-});
+//set up rules
+const Rule0 = new Rule(0, "Double One", "Throwing two ones ends the go", true);
+const Rule1 = new Rule(
+  1,
+  "Double Six",
+  "Throwing two sixes ends the go without adding round score but doubles your score",
+  true
+);
+const Rule2 = new Rule(
+  2,
+  "Two Double Digits in a row",
+  "Getting two double digit throws in a row sets ends your turn but you get to keep the score",
+  true
+);
+ruleList.push(Rule0);
+ruleList.push(Rule1);
+ruleList.push(Rule2);
 
-rulesList = [rule1];
-
-
-
-
-
-let domS = {
-  dice1DOM : document.querySelector(".dice1"),
-  dice2DOM : document.querySelector(".dice2"),
-  scoreP0 : document.querySelector("#score-0"),
-  scoreP1 : document.querySelector("#score-1"),
-  scoreActive: document.querySelector("#score-" + activePlayer),
-  roundScoreCurrentPlayer : document.querySelector("#current-" + activePlayer),
-  scoreMaxInput: document.querySelector("#scoreMax"),
-  p0Name : document.querySelector("#name-0"),
-  p1Name : document.querySelector("#name-1"),
-  p0Panel : document.querySelector(".player-0-panel"),
-  p1Panel : document.querySelector(".player-1-panel"),
-  activePanel: document.querySelector(".player-" + activePlayer + "-panel"),
-  winnerName : document.querySelector("#name-" + activePlayer),
-  ruleBreak: document.querySelector("#ruleBreak")
+//checks all rules
+const checkRules = () => {
+  checkRule0();
+  checkRule1();
+  //reset ruleBreak
+  ruleBreak = false;
 };
 
+//all rules
+const checkRule0 = () => {
+  //check if Rule is active and if no other rule was broken beforehand
+  if (Rule0.active && ruleBreak == false) {
+    console.log("trigger rule0");
+    if (gameCurrent.dice1 == 1 && gameCurrent.dice2 == 1) {
+      ruleBrokenDefault();
+    }
+  }
+};
 
+const checkRule1 = () => {
+  if (Rule1.active && !ruleBreak) {
+    if (gameCurrent.dice1 == 6 && gameCurrent.dice2 == 6) {
+      console.log("trigger rule1");
+      gameCurrent.activePlayer === 0
+        ? (gameCurrent.player1Score *= 2)
+        : (gameCurrent.player2Score *= 2);
+      ruleBrokenDefault();
+    }
+  }
+};
 
+//When rules are broken this gets executed
+//Maybe add for later a description what rules was broken with delay or something
+const ruleBrokenDefault = () => {
+  ruleBreak = true;
+  uiUpdateOnPlayerChange(gameCurrent.activePlayer);
+  endCheck();
+  gameCurrent.changePlayer();
+};
 
+const newGame = () => {
+  gameName = window.prompt("Spielname", "heinblöd");
+  let maxScore = doms.maxScore.value;
+  if (maxScore < 1) maxScore = 150;
+  gameCurrent = new Game(gameName, maxScore);
+  gameList.push(gameCurrent);
+};
 
+//Updates ui to change dice
+const changeDice = (dice1, dice2) => {
+  doms.dice1.setAttribute("src", `dice-${dice1}.png`);
+  if (gameCurrent.diceNumber === 2) {
+    doms.dice2.setAttribute("src", `dice-${dice2}.png`);
+  }
+};
 
-init();
+const updateRoundScore = (activePlayer) => {
+  roundScore += gameCurrent.dice1 + gameCurrent.dice2;
+  document.getElementById(`current-${activePlayer}`).innerHTML = roundScore;
+};
+
+const uiUpdateOnPlayerChange = (activePlayer) => {
+  //resets roundScore
+  roundScore = 0;
+  doms.score0.innerHTML = gameCurrent.player1Score;
+  doms.score1.innerHTML = gameCurrent.player2Score;
+  //changes active player flag on UI
+  document.getElementById(`current-${activePlayer}`).innerHTML = roundScore;
+  console.log(document.querySelector(`.player-${activePlayer}-panel`));
+  document
+    .querySelector(`.player-${activePlayer}-panel`)
+    .classList.remove("active");
+  if (activePlayer == 0) {
+    document.querySelector(`.player-1-panel`).classList.add("active");
+  } else {
+    document.querySelector(`.player-0-panel`).classList.add("active");
+  }
+};
+
+const endGame = (winner) => {
+  gameOnline = false;
+  document.querySelector(`.player-${winner}-panel`).classList.remove("active");
+  document.querySelector(`.player-${winner}-panel`).classList.add("winner");
+  document.getElementById(`name-${winner}`).innerHTML = "Winner!";
+};
+
+const endCheck = () => {
+  if (
+    gameCurrent.player1Score > gameCurrent.maxScore ||
+    gameCurrent.player2Score > gameCurrent.maxScore
+  ) {
+    endGame(gameCurrent.activePlayer);
+    return;
+  }
+};
+
+//initialize dummy game
+gameCurrent = new Game("bla", 150, 2);
+gameOnline = 0;
+
+// where all of the game logic is put
+function rolling() {
+  if (gameOnline) {
+    //roll the dice
+    gameCurrent.rollDice();
+    //display dice throw
+    changeDice(gameCurrent.dice1, gameCurrent.dice2);
+    //check rules
+    checkRules();
+    //do scoring
+    updateRoundScore(gameCurrent.activePlayer);
+  }
+}
+
+function holding() {
+  if (gameOnline === false) {
+    return;
+  }
+  //transfer current score to score and reset round
+  if (gameCurrent.activePlayer === 0) {
+    gameCurrent.player1Score += roundScore;
+  } else {
+    gameCurrent.player2Score += roundScore;
+  }
+  //update ui
+  uiUpdateOnPlayerChange(gameCurrent.activePlayer);
+  //check for max score and possible end game
+  endCheck();
+  //changeplayer
+  gameCurrent.changePlayer();
+}
+
+//Event Listeners
+doms.newGame.addEventListener("click", newGame);
+doms.diceRoll.addEventListener("click", rolling);
+doms.hold.addEventListener("click", holding);
