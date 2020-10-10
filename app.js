@@ -17,7 +17,7 @@ GAME RULES:
 let gameOnline = false;
 let gameList = [],
   ruleList = [];
-let gameCurrent, roundScore, ruleBreak;
+let gameCurrent, roundScore, ruleBreak, timeOut;
 
 // all document shortcuts
 const doms = {
@@ -65,6 +65,7 @@ class Game {
     doms.score1.innerHTML = "0";
     doms.currentScore0.innerHTML = "0";
     doms.currentScore1.innerHTML = "0";
+    toggleDiceView(false, 1500);
   }
 }
 
@@ -137,6 +138,7 @@ const ruleBrokenDefault = () => {
   gameCurrent.changePlayer();
 };
 
+//creates new game object, changes gameCurrent var to it and pushes it into gameList array
 const newGame = () => {
   gameName = window.prompt("Spielname", "heinblöd");
   let maxScore = doms.maxScore.value;
@@ -153,6 +155,7 @@ const changeDice = (dice1, dice2) => {
   }
 };
 
+//updates round score in view and model
 const updateRoundScore = (activePlayer) => {
   roundScore += gameCurrent.dice1 + gameCurrent.dice2;
   document.getElementById(`current-${activePlayer}`).innerHTML = roundScore;
@@ -183,6 +186,7 @@ const endGame = (winner) => {
   document.getElementById(`name-${winner}`).innerHTML = "Winner!";
 };
 
+
 const endCheck = () => {
   if (
     gameCurrent.player1Score > gameCurrent.maxScore ||
@@ -193,24 +197,44 @@ const endCheck = () => {
   }
 };
 
+const toggleDiceView = (show, timeInMs) => {
+  timOut = window.setTimeout(() => {
+    console.log("callback");
+    if (show) {
+      doms.dice1.style.display = "block";
+      doms.dice2.style.display = "block";
+    } else {
+      doms.dice1.style.display = "none";
+      doms.dice2.style.display = "none";
+    }
+  }, timeInMs);
+};
+
+const showDiceView = () => {
+
+};
+
 //initialize dummy game
 gameCurrent = new Game("bla", 150, 2);
 gameOnline = 0;
 
-// where all of the game logic is put
+// game logic what happens on roll
 function rolling() {
   if (gameOnline) {
     //roll the dice
     gameCurrent.rollDice();
     //display dice throw
     changeDice(gameCurrent.dice1, gameCurrent.dice2);
-    //check rules
+    toggleDiceView(true, 1500);
+    //checking rules
     checkRules();
     //do scoring
     updateRoundScore(gameCurrent.activePlayer);
   }
 }
 
+//button press to transfer round score to score
+//checks for win condition
 function holding() {
   if (gameOnline === false) {
     return;
