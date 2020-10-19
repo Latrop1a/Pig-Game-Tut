@@ -109,7 +109,7 @@ const checkRules = () => {
 //all rules
 const checkRule0 = () => {
   //check if Rule is active and if no other rule was broken beforehand
-  if (Rule0.active && ruleBreak == false) {
+  if (Rule0.active && !ruleBreak) {
     console.log("trigger rule0");
     if (gameCurrent.dice1 == 1 && gameCurrent.dice2 == 1) {
       ruleBrokenDefault();
@@ -124,6 +124,7 @@ const checkRule1 = () => {
       gameCurrent.activePlayer === 0
         ? (gameCurrent.player1Score *= 2)
         : (gameCurrent.player2Score *= 2);
+      //afterwards default rule execute
       ruleBrokenDefault();
     }
   }
@@ -132,9 +133,12 @@ const checkRule1 = () => {
 //When rules are broken this gets executed
 //Maybe add for later a description what rules was broken with delay or something
 const ruleBrokenDefault = () => {
+  //boolean stops further rule checks
   ruleBreak = true;
   uiUpdateOnPlayerChange(gameCurrent.activePlayer);
+  //checks if endcondition is reached
   endCheck();
+  //changes over to other player
   gameCurrent.changePlayer();
 };
 
