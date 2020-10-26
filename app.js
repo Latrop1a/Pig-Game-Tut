@@ -14,6 +14,9 @@ GAME RULES:
 
 */
 
+//todo: make slight delay on UIchangeDice
+//todo: get notification window on ruleBreak
+
 let gameOnline = false;
 let gameList = [],
   ruleList = [];
@@ -46,16 +49,25 @@ class Game {
     this.player1Score = 0;
     this.player2Score = 0;
     this.restart();
+    this.last5Throws = [];
   }
-  //generate dice
+  //generate dice for game AND saves the last 5 throws in an array for rules or maybe a little history display
   rollDice() {
     this.dice1 = Math.ceil(Math.random() * 6);
     this.dice2 = Math.ceil(Math.random() * 6);
+    if (this.last5Throws.length >= 5) {
+      this.last5Throws.pop();
+      this.last5Throws.unshift([this.dice1, this.dice2]);
+    } else {
+      this.last5Throws.unshift([this.dice1, this.dice2]);
+    }
+    console.log(this.last5Throws);
   }
   //changes Player in Game and in UI
   changePlayer() {
     this.activePlayer === 0 ? (this.activePlayer = 1) : (this.activePlayer = 0);
   }
+  //restarts game
   restart() {
     this.activePlayer = 0;
     roundScore = 0;
@@ -77,6 +89,12 @@ class Rule {
     this.name = name;
     this.description = description;
     this.active = active;
+  }
+  getRuleName() {
+    return this.name;
+  }
+  getRuleText() {
+    return this.description;
   }
 }
 
@@ -110,9 +128,9 @@ const checkRules = () => {
 const checkRule0 = () => {
   //check if Rule is active and if no other rule was broken beforehand
   if (Rule0.active && !ruleBreak) {
-    console.log("trigger rule0");
     if (gameCurrent.dice1 == 1 && gameCurrent.dice2 == 1) {
-      ruleBrokenDefault();
+      console.log("trigger rule0");
+      ruleBrokenDefault(0);
     }
   }
 };
@@ -125,21 +143,33 @@ const checkRule1 = () => {
         ? (gameCurrent.player1Score *= 2)
         : (gameCurrent.player2Score *= 2);
       //afterwards default rule execute
-      ruleBrokenDefault();
+      ruleBrokenDefault(1);
     }
   }
 };
 
 //When rules are broken this gets executed
 //Maybe add for later a description what rules was broken with delay or something
-const ruleBrokenDefault = () => {
+const ruleBrokenDefault = (ruleID) => {
   //boolean stops further rule checks
   ruleBreak = true;
+  // show broken rule on UI
+  displayRuleBrokenText(ruleID);
+  // change player on UI
   uiUpdateOnPlayerChange(gameCurrent.activePlayer);
   //checks if endcondition is reached
   endCheck();
   //changes over to other player
   gameCurrent.changePlayer();
+};
+
+// shows on UI what rule was broken
+const displayRuleBrokenText = (ruleID) => {
+  ruleName = ruleList[ruleID].getRuleName();
+  ruleText = ruleList[ruleID].getRuleText();
+  console.log(ruleName);
+  console.log(ruleText);
+  //need to create nice looking window
 };
 
 //creates new game object, changes gameCurrent var to it and pushes it into gameList array
@@ -151,8 +181,8 @@ const newGame = () => {
   gameList.push(gameCurrent);
 };
 
-//Updates ui to change dice
-const changeDice = (dice1, dice2) => {
+//Updates ui to change dice to number from current game (dice1&2)
+const uiChangeDice = (dice1, dice2) => {
   doms.dice1.setAttribute("src", `dice-${dice1}.png`);
   if (gameCurrent.diceNumber === 2) {
     doms.dice2.setAttribute("src", `dice-${dice2}.png`);
@@ -183,14 +213,17 @@ const uiUpdateOnPlayerChange = (activePlayer) => {
   }
 };
 
+// endgame UI modification
 const endGame = (winner) => {
+  //deactivates logic
   gameOnline = false;
+  //changes UI
   document.querySelector(`.player-${winner}-panel`).classList.remove("active");
   document.querySelector(`.player-${winner}-panel`).classList.add("winner");
   document.getElementById(`name-${winner}`).innerHTML = "Winner!";
 };
 
-
+// checks if maxScore was reached by either player
 const endCheck = () => {
   if (
     gameCurrent.player1Score > gameCurrent.maxScore ||
@@ -201,6 +234,7 @@ const endCheck = () => {
   }
 };
 
+// show or hide dice with delay
 const toggleDiceView = (show, timeInMs) => {
   timOut = window.setTimeout(() => {
     console.log("callback");
@@ -214,10 +248,6 @@ const toggleDiceView = (show, timeInMs) => {
   }, timeInMs);
 };
 
-const showDiceView = () => {
-
-};
-
 //initialize dummy game
 gameCurrent = new Game("bla", 150, 2);
 gameOnline = 0;
@@ -228,7 +258,7 @@ function rolling() {
     //roll the dice
     gameCurrent.rollDice();
     //display dice throw
-    changeDice(gameCurrent.dice1, gameCurrent.dice2);
+    uiChangeDice(gameCurrent.dice1, gameCurrent.dice2);
     toggleDiceView(true, 1500);
     //checking rules
     checkRules();
